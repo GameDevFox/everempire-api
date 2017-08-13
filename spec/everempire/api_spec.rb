@@ -1,8 +1,8 @@
 require "spec_helper"
 
-RSpec.describe Everempire::Api do
+RSpec.describe EverEmpire::API do
   it "has a version number" do
-    expect(Everempire::Api::VERSION).not_to be nil
+    expect(EverEmpire::API::VERSION).not_to be nil
   end
 
   it "does something useful" do
