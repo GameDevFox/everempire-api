@@ -50,10 +50,10 @@ module EverEmpire
 
         if DB::Token.first(user_id: user_id)
           # update existing token
-          DB::Token.where(user_id: user_id).update(token: tokenStr) # update token
+          DB::Token.where(user_id: user_id).update(token: tokenStr, created_at: Sequel.function(:now)) # update token
         else
           # create token
-          DB::Token.create(user_id: user_id, token: tokenStr, created_at: Sequel.function(:NOW)) unless tokenStr
+          DB::Token.create(user_id: user_id, token: tokenStr, created_at: Sequel.function(:now)) unless tokenStr
         end
 
         tokenStr

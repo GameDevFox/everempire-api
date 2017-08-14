@@ -5,21 +5,29 @@ require 'omniauth-facebook'
 require 'omniauth-github'
 require 'omniauth-google-oauth2'
 require 'omniauth-twitter'
+
 require 'rack'
+require 'warden'
 
 module EverEmpire
   module API
-    autoload :BaseAPI, 'everempire/api/base_api'
+    autoload :Application, 'everempire/api/application'
+    autoload :Config, 'everempire/api/config'
     autoload :DB, 'everempire/api/db'
     autoload :OmniAuthCallbacks, 'everempire/api/omniauth_callbacks'
-    autoload :Config, 'everempire/api/config'
+    autoload :TokenStrategy, 'everempire/api/token_strategy'
 
-    config = Config
+    Warden::Strategies.add(:token, TokenStrategy)
 
-    APP = Rack::Builder.new do |builder|
+    APP = Rack::Builder.new do
       use Rack::Session::Pool
 
-      OmniAuth.config.full_host = config.host_name
+      use Warden::Manager do |manager|
+        manager.default_strategies :token
+        manager.failure_app = proc { [401, {}, ['Nope... nope, nope, nope.']] }
+      end
+
+      OmniAuth.config.full_host = Config.host_name
       # TODO: Make this configurable
       OmniAuth.config.failure_raise_out_environments = []
 
@@ -31,16 +39,16 @@ module EverEmpire
       }
 
       use OmniAuth::Builder do
-        config.providers.each do |prov|
+        Config.providers.each do |prov|
           if provider_opts[prov]
             provider prov, *provider_opts[prov]
           else
-            provider prov, config["auth_#{prov}_id"], config["auth_#{prov}_secret"]
+            provider prov, Config["auth_#{prov}_id"], Config["auth_#{prov}_secret"]
           end
         end
       end
 
-      run Rack::Cascade.new([BaseAPI, OmniAuthCallbacks])
+      run Rack::Cascade.new([Application, OmniAuthCallbacks])
     end.to_app
   end
 end
