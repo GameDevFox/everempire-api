@@ -3,7 +3,7 @@ require 'grape'
 module EverEmpire
   module API
     class Application < Grape::API
-      default_format :json
+      format :json
 
       module RawJson
         def to_json

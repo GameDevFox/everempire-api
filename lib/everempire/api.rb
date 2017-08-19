@@ -9,6 +9,8 @@ require 'omniauth-twitter'
 require 'rack'
 require 'warden'
 
+require 'omniauth/strategies/developer-extend'
+
 module EverEmpire
   module API
     autoload :Application, 'everempire/api/application'
