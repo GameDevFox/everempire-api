@@ -47,7 +47,7 @@ module EverEmpire
       end
 
       post '/me/world' do
-        DB::World.create(name: params['name'], user_id: user_id).to_json(include: :user)
+        raw_json DB::World.create(name: params['name'], user_id: user_id).to_json(include: :user)
       end
 
       delete '/me/world/:id' do
