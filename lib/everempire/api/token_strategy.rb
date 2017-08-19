@@ -22,7 +22,7 @@ module EverEmpire
 
       def token_dataset
         @token_dataset ||= DB::Token.where(
-            Sequel.lit("created_at + INTERVAL '5 minutes' > NOW()")
+          Sequel.lit("created_at + INTERVAL '5 minutes' > NOW()")
         )
       end
     end

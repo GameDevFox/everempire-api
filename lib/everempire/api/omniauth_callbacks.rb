@@ -13,8 +13,8 @@ module EverEmpire
           auth_hash = env['omniauth.auth']
 
           auth = DB::Auth.first(
-              provider: auth_hash.provider,
-              provider_uid: auth_hash.uid
+            provider: auth_hash.provider,
+            provider_uid: auth_hash.uid
           )
 
           user_id = auth&.user_id || create_user(auth_hash)
@@ -31,32 +31,32 @@ module EverEmpire
       private
       def create_user(auth_hash)
         user = DB::User.create(
-            name: auth_hash.info.nickname || auth_hash.info.name,
-            email: auth_hash.info.email
+          name: auth_hash.info.nickname || auth_hash.info.name,
+          email: auth_hash.info.email
         )
 
         DB::Auth.create(
-            provider: auth_hash.provider,
-            provider_uid: auth_hash.uid,
-            user_id: user.id,
-            created_at: Sequel.function(:NOW)
+          provider: auth_hash.provider,
+          provider_uid: auth_hash.uid,
+          user_id: user.id,
+          created_at: Sequel.function(:NOW)
         )
 
         user.id
       end
 
       def create_token(user_id)
-        tokenStr = SecureRandom.hex(32)
+        token_str = SecureRandom.hex(32)
 
         if DB::Token.first(user_id: user_id)
           # update existing token
-          DB::Token.where(user_id: user_id).update(token: tokenStr, created_at: Sequel.function(:now)) # update token
+          DB::Token.where(user_id: user_id).update(token: token_str, created_at: Sequel.function(:now))
         else
           # create token
-          DB::Token.create(user_id: user_id, token: tokenStr, created_at: Sequel.function(:now)) unless tokenStr
+          DB::Token.create(user_id: user_id, token: token_str, created_at: Sequel.function(:now))
         end
 
-        tokenStr
+        token_str
       end
     end
   end

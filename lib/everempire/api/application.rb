@@ -3,19 +3,58 @@ require 'grape'
 module EverEmpire
   module API
     class Application < Grape::API
-      format :json
+      default_format :json
 
-      get '/test' do
-        %w[hello world]
+      module RawJson
+        def to_json
+          self
+        end
       end
 
-      get '/me/worlds' do
-        user_id = env['warden'].authenticate!
-        DB::World.where(user_id: user_id)
+      helpers do
+        def raw_json(result)
+          result.extend(RawJson)
+        end
+
+        def token
+          env['HTTP_TOKEN']
+        end
+
+        def user_id
+          env['warden'].authenticate!
+        end
+      end
+
+      get '/auth/providers' do
+        Config.providers
       end
 
       get '/worlds' do
-        DB::World.all
+        raw_json DB::World.eager(:user).to_json(include: :user)
+      end
+
+      get '/me' do
+        DB::User[user_id]
+      end
+
+      delete '/me/token' do
+        DB::Token.first(user_id: user_id, token: token).delete
+        body false
+      end
+
+      get '/me/worlds' do
+        DB::World.where(user_id: user_id)
+      end
+
+      post '/me/world' do
+        DB::World.create(name: params['name'], user_id: user_id).to_json(include: :user)
+      end
+
+      delete '/me/world/:id' do
+        user_id = env['warden'].authenticate!
+
+        DB::World.first(id: params[:id], user_id: user_id).delete
+        body false
       end
     end
   end
