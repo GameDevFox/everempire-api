@@ -37,6 +37,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'omniauth-twitter', '~> 1.4.0'
   spec.add_runtime_dependency 'pg', '~> 0.21.0'
   spec.add_runtime_dependency 'rack', '~> 2.0.3'
+  spec.add_runtime_dependency 'rack-cors', '~> 1.0.1'
   spec.add_runtime_dependency 'sequel', '~> 4.49.0'
   spec.add_runtime_dependency 'sinatra', '~> 2.0.0'
   spec.add_runtime_dependency 'warden', '~> 1.2.7'

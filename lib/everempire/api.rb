@@ -7,9 +7,10 @@ require 'omniauth-google-oauth2'
 require 'omniauth-twitter'
 
 require 'rack'
+require 'rack/cors'
 require 'warden'
 
-require 'omniauth/strategies/developer-extend'
+require 'omniauth/strategies/developer_extend'
 
 module EverEmpire
   module API
@@ -23,6 +24,16 @@ module EverEmpire
     Warden::Strategies.add(:token, TokenStrategy)
 
     APP = Rack::Builder.new do |builder|
+      if ENV['RACK_ENV'] == 'development'
+        puts 'Using CORS middleware [development mode]'
+        use Rack::Cors do
+          allow do
+            origins '*'
+            resource '*', headers: :any, methods: %i[get post put delete options]
+          end
+        end
+      end
+
       use Rack::Session::Pool
 
       use Warden::Manager do |manager|

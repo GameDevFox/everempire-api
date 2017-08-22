@@ -10,6 +10,10 @@ module EverEmpire
 
       %w[get post].each do |method|
         send(method, '/auth/:provider/callback') do
+          # Before we create this new session
+          # let's clean out the old, expired tokens
+          DB::Token.expired.delete
+
           auth_hash = env['omniauth.auth']
 
           auth = DB::Auth.first(
@@ -18,14 +22,14 @@ module EverEmpire
           )
 
           user_id = auth&.user_id || create_user(auth_hash)
-          token = create_token user_id
+          token_data = create_token user_id
 
-          event_page :auth, token
+          post_message type: :auth, token: token_data[:token], expires_at: token_data[:expires_at]
         end
       end
 
       get '/auth/failure' do
-        event_page :auth_failure, env['rack.request.query_hash']
+        post_message type: :auth_failure, data: env['rack.request.query_hash']
       end
 
       private
@@ -50,13 +54,18 @@ module EverEmpire
 
         if DB::Token.first(user_id: user_id)
           # update existing token
-          DB::Token.where(user_id: user_id).update(token: token_str, created_at: Sequel.function(:now))
+          token = DB::Token.first(user_id: user_id)
+          token.update(token: token_str, created_at: Sequel.function(:now))
+          token.refresh
         else
           # create token
-          DB::Token.create(user_id: user_id, token: token_str, created_at: Sequel.function(:now))
+          token = DB::Token.create(user_id: user_id, token: token_str, created_at: Sequel.function(:now))
         end
 
-        token_str
+        token_data = { token: token[:token] }
+        token_data[:expires_at] = (token[:created_at] + Config.expire_token_interval_secs).utc.iso8601
+
+        token_data
       end
     end
   end

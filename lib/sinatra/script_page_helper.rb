@@ -1,5 +1,6 @@
 module Sinatra
   module ScriptPageHelper
+
     def script_page(name, hash = {})
       script_page = File.new("#{__dir__}/views/script_page.erb").read
       page_erb = ERB.new(script_page)
@@ -12,8 +13,9 @@ module Sinatra
       result
     end
 
-    def event_page(type, data)
-      script_page :event, type: type, data: data
+    def post_message(message)
+      target_origin = EverEmpire::API::Config.target_origin
+      script_page :post_message, message: message, target_origin: target_origin
     end
   end
 end
