@@ -15,16 +15,12 @@ module EverEmpire
           DB::Token.expired.delete
 
           auth_hash = env['omniauth.auth']
-
-          auth = DB::Auth.first(
-            provider: auth_hash.provider,
-            provider_uid: auth_hash.uid
-          )
+          auth = DB::Auth.first(provider: auth_hash.provider, provider_uid: auth_hash.uid)
 
           user_id = auth&.user_id || create_user(auth_hash)
-          token_data = create_token user_id
+          token = DB::Token.create_for_user user_id
 
-          post_message type: :auth, token: token_data[:token], expires_at: token_data[:expires_at]
+          post_message type: :auth, token: token[:token], expires_at: token.expires_at.utc.iso8601
         end
       end
 
@@ -47,25 +43,6 @@ module EverEmpire
         )
 
         user.id
-      end
-
-      def create_token(user_id)
-        token_str = SecureRandom.hex(32)
-
-        if DB::Token.first(user_id: user_id)
-          # update existing token
-          token = DB::Token.first(user_id: user_id)
-          token.update(token: token_str, created_at: Sequel.function(:now))
-          token.refresh
-        else
-          # create token
-          token = DB::Token.create(user_id: user_id, token: token_str, created_at: Sequel.function(:now))
-        end
-
-        token_data = { token: token[:token] }
-        token_data[:expires_at] = (token[:created_at] + Config.expire_token_interval_secs).utc.iso8601
-
-        token_data
       end
     end
   end

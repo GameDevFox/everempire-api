@@ -37,6 +37,13 @@ module EverEmpire
         DB::User[user_id]
       end
 
+      get '/me/token' do
+        user_id = env['warden'].authenticate!
+
+        token = DB::Token.create_for_user(user_id)
+        { token: token[:token], expires_at: token.expires_at.utc.iso8601 }
+      end
+
       delete '/me/token' do
         DB::Token.first(user_id: user_id, token: token).delete
         body false

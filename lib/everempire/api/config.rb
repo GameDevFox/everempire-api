@@ -9,6 +9,10 @@ module EverEmpire
         ENV[var_name]
       end
 
+      def self.concurrent_token_limit
+        2
+      end
+
       def self.expire_token_interval_secs
         @expire_token_interval_secs ||= self['expire_token_interval_secs'].to_i
       end
